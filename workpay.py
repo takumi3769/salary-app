@@ -4,7 +4,8 @@ from datetime import datetime, timedelta, time
 import jpholiday
 from sqlalchemy import text
 
-# --- 1. データベース設定 ---
+# --- 1. データベース設定 (Streamlit Cloud永続化対応) ---
+# st.connectionによりクラウド上でもデータが保持されます
 conn = st.connection('salary_db', type='sql', url='sqlite:///my_salary.db')
 
 def init_db():
@@ -27,46 +28,55 @@ def save_wage(wage):
 # --- 2. 画面基本設定 ---
 st.set_page_config(page_title="給料管理", page_icon="💰", layout="centered")
 
-# --- 3. カスタムCSS（クリック時の黒ずみ防止を追加） ---
+# --- 3. カスタムCSS（デザイン調整・ホバーエフェクト） ---
 st.markdown("""
     <style>
+    /* ヘッダー周りだけを水色に設定 */
+    header, [data-testid="stHeader"] {
+        background-color: #E0F2F7 !important;
+    }
+
     /* 全体の背景色を水色に固定 */
     .stApp { background-color: #E0F2F7 !important; }
-    header, [data-testid="stHeader"] { background-color: #E0F2F7 !important; }
     section[data-testid="stSidebar"] { background-color: #FFFFFF !important; }
 
-    /* --- ボタンの基本スタイル --- */
+    /* 全てのボタンに対する視覚エフェクト */
     div.stButton > button {
-        background-color: #D3D3D3 !important; 
-        color: #000000 !important; 
-        border: 1px solid #999999 !important;
-        border-radius: 8px !important;
-        font-weight: bold !important;
         transition: all 0.2s ease-in-out !important;
-        width: 100%;
+        border-radius: 8px !important;
     }
-
-    /* マウスホバー時 */
+    
+    /* マウスを載せたとき */
     div.stButton > button:hover {
-        transform: translateY(-2px) scale(1.01);
-        border-color: #ff4b4b !important;
+        transform: translateY(-2px) scale(1.01); /* 少し浮き上がって大きく */
+        border-color: #ff4b4b !important;       /* ストリームリット標準のアクセント色 */
         color: #ff4b4b !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-        background-color: #DCDCDC !important; /* ホバー時はわずかに色を変える */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* 影をつけて立体感を出す */
+        background-color: rgba(255, 75, 75, 0.05) !important;
+    }
+    
+    /* ボタンをクリックした瞬間 */
+    div.stButton > button:active {
+        transform: translateY(0px) scale(0.98);
+        transition: 0.1s !important;
     }
 
-    /* 【重要】クリック中・クリック後の黒ずみ/青枠を徹底排除 */
-    div.stButton > button:focus,
-    div.stButton > button:active,
-    div.stButton > button:focus-visible {
-        background-color: #D3D3D3 !important; /* 元のグレーを維持 */
-        color: #000000 !important;             /* 文字色を黒で固定 */
-        border: 1px solid #999999 !important; /* 枠線を維持 */
-        box-shadow: none !important;           /* 影（黒ずみの原因）を消す */
-        outline: none !important;              /* フォーカス枠を消す */
+    /* 保存ボタン（フルサイズボタン）を少し目立たせる */
+    div.stButton > button[kind="secondary"] {
+        border: 1px solid #ddd;
+    }
+    
+    /* --- 入力エリアの背景黒ずみを徹底修正 --- */
+    div[data-testid="stDateInput"], 
+    div[data-testid="stSelectbox"], 
+    div[data-testid="stNumberInput"],
+    div[data-testid="stCheckbox"] {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }
 
-    /* 入力エリアの背景白抜き設定 */
+    /* ボックス本体（白背景・黒文字） */
     div[data-baseweb="input"], 
     div[data-baseweb="select"] > div, 
     div[data-testid="stDateInput"] > div,
@@ -74,23 +84,65 @@ st.markdown("""
         background-color: #FFFFFF !important;
         color: #000000 !important;
         border: 1px solid #CCCCCC !important;
+        box-shadow: none !important;
         border-radius: 8px !important;
     }
 
+    /* 入力テキストの色と背景 */
     input {
         background-color: #FFFFFF !important;
         color: #000000 !important;
         -webkit-text-fill-color: #000000 !important;
     }
 
-    /* 文字色を黒に統一 */
-    h1, h2, h3, p, label, span, [data-testid="stMetricValue"], [data-testid="stWidgetLabel"] p {
+    /* --- 数値入力（+/-）ボタンとアイコンの修正 --- */
+    div[data-testid="stNumberInput"] button {
+        background-color: #F0F2F6 !important; /* 少しグレーにして押しやすく */
+        border: 1px solid #CCCCCC !important;
+        border-radius: 4px !important;
+        margin: 2px !important;
+    }
+
+    /* アイコン(SVG)を強制表示 */
+    [data-testid="stNumberInputStepDown"] svg { 
+        fill: #0000FF !important; /* マイナスは青 */
+        display: block !important;
+    }
+    [data-testid="stNumberInputStepUp"] svg { 
+        fill: #FF0000 !important; /* プラスは赤 */
+        display: block !important;
+    }
+
+    /* --- チェックボックスのデザイン --- */
+    div[data-testid="stCheckbox"] div[role="checkbox"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #CCCCCC !important;
+    }
+    div[data-testid="stCheckbox"] div[role="checkbox"][aria-checked="true"] {
+        background-color: #CCCCCC !important;
+    }
+    div[data-testid="stCheckbox"] svg {
+        stroke: #000000 !important;
+    }
+
+    /* --- 通常ボタン（保存・削除） --- */
+    .stButton > button {
+        background-color: #D3D3D3 !important; 
+        color: #000000 !important; 
+        border: 1px solid #999999 !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+    }
+
+    /* 全文字色を黒に固定 */
+    h1, h2, h3, p, label, span, .stMarkdown, [data-testid="stMetricValue"], [data-testid="stWidgetLabel"] p {
         color: #000000 !important;
     }
 
-    /* 履歴テーブルの装飾 */
+    /* 履歴テーブル */
     div[data-testid="stTable"] { background-color: #FFFFFF !important; border-radius: 10px; }
-    </style>
+    table { background-color: #FFFFFF !important; color: #000000 !important; }
+</style>
 """, unsafe_allow_html=True)
 
 # --- 4. サイドバー：時給設定 ---
@@ -183,8 +235,9 @@ st.divider()
 st.info(f"💡 **計算結果**\n\n実労働: {int(actual_h*60)}分 ({actual_h:.2f}h) ／ 深夜分: {int(night_h*60)}分 ／ 給料: **{salary:,}円**")
 
 # --- 7. 保存・履歴管理 ---
-if st.button("💾 この内容で履歴に保存"):
+if st.button("💾 この内容で履歴に保存", use_container_width=True):
         with conn.session as s:
+            # text() で SQL文を囲む
             s.execute(text("INSERT INTO shifts (date, start, end, total_h, night_h, salary) VALUES (:date, :start, :end, :total_h, :night_h, :salary)"),
                       {"date": d.strftime('%Y-%m-%d'), "start": s_t.strftime('%H:%M'), "end": e_t.strftime('%H:%M'), 
                        "total_h": round(actual_h, 2), "night_h": round(night_h, 2), "salary": salary})
