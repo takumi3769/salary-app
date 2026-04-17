@@ -28,78 +28,75 @@ def save_wage(wage):
 # --- 2. 画面基本設定 ---
 st.set_page_config(page_title="給料管理", page_icon="💰", layout="centered")
 
-# --- 3. カスタムCSS（クリック後の黒ずみを完全に封印） ---
+# --- 3. カスタムCSS（Expanderの黒ずみ・ボタンの不具合を完全修正） ---
 st.markdown("""
     <style>
-    /* ヘッダー・背景設定 */
+    /* 全体の背景設定 */
     header, [data-testid="stHeader"] { background-color: #E0F2F7 !important; }
     .stApp { background-color: #E0F2F7 !important; }
     section[data-testid="stSidebar"] { background-color: #FFFFFF !important; }
 
-    /* --- 通常ボタンの基本スタイル --- */
+    /* --- 【今回のメイン修正】Expander（データの個別削除）の黒ずみ対策 --- */
+    /* 通常時・マウスホバー時・クリック後すべてにおいて背景を透明化して黒ずみを消す */
+    div[data-testid="stExpander"] details {
+        border: none !important;
+        background-color: transparent !important;
+    }
+    div[data-testid="stExpander"] summary {
+        background-color: transparent !important;
+        color: #000000 !important;
+    }
+    /* クリックした後のフォーカス（黒い枠や背景）を徹底的に消去 */
+    div[data-testid="stExpander"] summary:focus,
+    div[data-testid="stExpander"] summary:active,
+    div[data-testid="stExpander"] summary:hover {
+        background-color: rgba(0,0,0,0.05) !important; /* ほんの少し暗くする程度 */
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    /* アイコンの色を黒に固定 */
+    div[data-testid="stExpander"] svg {
+        fill: #000000 !important;
+    }
+
+    /* --- ボタンのスタイル（グレーを維持しつつ黒ずみ防止） --- */
     .stButton > button {
         background-color: #D3D3D3 !important; 
         color: #000000 !important; 
         border: 1px solid #999999 !important;
         border-radius: 8px !important;
         font-weight: bold !important;
-        /* タップ時の青いハイライト自体を消去 */
         -webkit-tap-highlight-color: transparent !important;
     }
     
-    /* ホバー時 */
     div.stButton > button:hover {
         border-color: #ff4b4b !important;
         color: #ff4b4b !important;
-        background-color: rgba(255, 75, 75, 0.05) !important;
+        background-color: #E0E0E0 !important;
     }
-
-    /* 【最終解決策】クリック中、クリック後、フォーカス時など、
-       あらゆる「ボタンの状態」において背景色をグレーで固定する */
+    
+    /* ボタンクリック後の変色を防止 */
+    div.stButton > button:focus, 
     div.stButton > button:active,
-    div.stButton > button:focus,
-    div.stButton > button:focus:active,
     div.stButton > button:focus:not(:active) {
-        background-color: #D3D3D3 !important; /* 絶対にグレー */
-        background-image: none !important;    /* 背景画像を完全に消す */
-        color: #000000 !important;             /* 絶対に黒文字 */
-        outline: none !important;              /* 枠線を消す */
-        box-shadow: none !important;           /* 影を消す */
+        background-color: #D3D3D3 !important;
+        background-image: none !important;
+        box-shadow: none !important;
+        outline: none !important;
     }
 
-    /* 以下、他のパーツのデザイン（変更なし） */
-    div.stButton > button[kind="secondary"] { border: 1px solid #ddd; }
-    div[data-testid="stDateInput"], div[data-testid="stSelectbox"], 
-    div[data-testid="stNumberInput"], div[data-testid="stCheckbox"] {
-        background-color: transparent !important;
-        border: none !important;
-    }
+    /* --- 入力エリア・テキスト設定（維持） --- */
     div[data-baseweb="input"], div[data-baseweb="select"] > div, 
-    div[data-testid="stDateInput"] > div,
-    div[data-testid="stNumberInput"] div[data-baseweb="input"] {
+    div[data-testid="stDateInput"] > div {
         background-color: #FFFFFF !important;
         color: #000000 !important;
         border: 1px solid #CCCCCC !important;
-        border-radius: 8px !important;
     }
-    input {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-    }
-    div[data-testid="stNumberInput"] button {
-        background-color: #F0F2F6 !important;
-        border: 1px solid #CCCCCC !important;
-        border-radius: 4px !important;
-    }
-    [data-testid="stNumberInputStepDown"] svg { fill: #0000FF !important; }
-    [data-testid="stNumberInputStepUp"] svg { fill: #FF0000 !important; }
-    div[data-testid="stCheckbox"] div[role="checkbox"] { background-color: #FFFFFF !important; border: 1px solid #CCCCCC !important; }
-    div[data-testid="stCheckbox"] div[role="checkbox"][aria-checked="true"] { background-color: #CCCCCC !important; }
-    div[data-testid="stCheckbox"] svg { stroke: #000000 !important; }
+    
     h1, h2, h3, p, label, span, .stMarkdown, [data-testid="stMetricValue"], [data-testid="stWidgetLabel"] p {
         color: #000000 !important;
     }
+
     div[data-testid="stTable"] { background-color: #FFFFFF !important; border-radius: 10px; }
     table { background-color: #FFFFFF !important; color: #000000 !important; }
 </style>
