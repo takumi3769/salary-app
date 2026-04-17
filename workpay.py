@@ -28,7 +28,7 @@ def save_wage(wage):
 # --- 2. 画面基本設定 ---
 st.set_page_config(page_title="給料管理", page_icon="💰", layout="centered")
 
-# --- 3. カスタムCSS（デザイン維持・クリック時の黒ずみ防止） ---
+# --- 3. カスタムCSS（デザイン維持・黒ずみ完全排除版） ---
 st.markdown("""
     <style>
     /* ヘッダー周りだけを水色に設定 */
@@ -59,14 +59,16 @@ st.markdown("""
         background-color: rgba(255, 75, 75, 0.05) !important;
     }
     
-    /* 【修正箇所】ボタンをクリックした瞬間とクリック後（黒ずみ防止） */
-    div.stButton > button:active, div.stButton > button:focus {
-        background-color: #D3D3D3 !important; /* 通常時と同じ色を強制 */
-        color: #000000 !important;             /* 文字色も維持 */
-        transform: translateY(0px) scale(0.98);
-        transition: 0.1s !important;
+    /* 【修正箇所】クリック中・クリック後の黒ずみを「無効化」する設定 */
+    div.stButton > button:active, 
+    div.stButton > button:focus, 
+    div.stButton > button:focus:active {
+        background-color: #D3D3D3 !important; /* 元のグレーを維持 */
+        background-image: none !important;    /* デフォルトの暗いグラデーションを消去 */
+        box-shadow: none !important;          /* 変な影を消去 */
+        color: #000000 !important;             /* 文字を黒で固定 */
         outline: none !important;
-        box-shadow: none !important;
+        border-color: #999999 !important;     /* 枠線も維持 */
     }
 
     /* 以下、変更なし */
