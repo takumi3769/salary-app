@@ -22,7 +22,7 @@ def get_saved_wage():
 
 def save_wage(wage):
     with conn.session as s:
-        s.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('hourly_wage', :wage)", {"wage": str(wage)})
+        s.execute(text("INSERT OR REPLACE INTO settings (key, value) VALUES ('hourly_wage', :wage)"), {"wage": str(wage)})
         s.commit()
 
 # --- 2. 画面基本設定 ---
@@ -236,13 +236,14 @@ st.info(f"💡 **計算結果**\n\n実労働: {int(actual_h*60)}分 ({actual_h:.
 
 # --- 7. 保存・履歴管理 ---
 if st.button("💾 この内容で履歴に保存", use_container_width=True):
-    with conn.session as s:
-        s.execute("INSERT INTO shifts (date, start, end, total_h, night_h, salary) VALUES (:date, :start, :end, :total_h, :night_h, :salary)",
-                  {"date": d.strftime('%Y-%m-%d'), "start": s_t.strftime('%H:%M'), "end": e_t.strftime('%H:%M'), 
-                   "total_h": round(actual_h, 2), "night_h": round(night_h, 2), "salary": salary})
-        s.commit()
-    st.success("履歴に保存しました！")
-    st.rerun()
+        with conn.session as s:
+            # text() で SQL文を囲む
+            s.execute(text("INSERT INTO shifts (date, start, end, total_h, night_h, salary) VALUES (:date, :start, :end, :total_h, :night_h, :salary)"),
+                      {"date": d.strftime('%Y-%m-%d'), "start": s_t.strftime('%H:%M'), "end": e_t.strftime('%H:%M'), 
+                       "total_h": round(actual_h, 2), "night_h": round(night_h, 2), "salary": salary})
+            s.commit()
+        st.success("履歴に保存しました！")
+        st.rerun()
 
 st.subheader("📊 勤務履歴")
 df = conn.query("SELECT * FROM shifts ORDER BY date DESC", ttl=0)
@@ -262,7 +263,7 @@ if not df.empty:
         target_label = st.selectbox("削除するデータを選択", options=list(delete_options.keys()), key="delete_select")
         if st.button("選択したデータを削除"):
             with conn.session as s:
-                s.execute("DELETE FROM shifts WHERE id = :id", {"id": delete_options[target_label]})
+                s.execute(text("DELETE FROM shifts WHERE id = :id"), {"id": delete_options[target_label]})
                 s.commit()
             st.rerun()
 else:
