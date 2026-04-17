@@ -28,57 +28,49 @@ def save_wage(wage):
 # --- 2. 画面基本設定 ---
 st.set_page_config(page_title="給料管理", page_icon="💰", layout="centered")
 
-# --- 3. カスタムCSS（デザイン維持・黒ずみ完全排除版） ---
+# --- 3. カスタムCSS（フォーカス残りを完全に消去） ---
 st.markdown("""
     <style>
-    /* ヘッダー周りだけを水色に設定 */
-    header, [data-testid="stHeader"] {
-        background-color: #E0F2F7 !important;
-    }
-
-    /* 全体の背景色を水色に固定 */
+    /* ヘッダー・背景設定（変更なし） */
+    header, [data-testid="stHeader"] { background-color: #E0F2F7 !important; }
     .stApp { background-color: #E0F2F7 !important; }
     section[data-testid="stSidebar"] { background-color: #FFFFFF !important; }
 
-    /* --- 通常ボタン（保存・削除）の基本スタイル --- */
+    /* --- 通常ボタンの基本スタイル --- */
     .stButton > button {
         background-color: #D3D3D3 !important; 
         color: #000000 !important; 
         border: 1px solid #999999 !important;
         border-radius: 8px !important;
         font-weight: bold !important;
-        transition: all 0.2s ease-in-out !important;
+        transition: background-color 0.2s !important;
     }
     
-    /* マウスを載せたとき */
+    /* マウスを載せたとき（変更なし） */
     div.stButton > button:hover {
-        transform: translateY(-2px) scale(1.01);
         border-color: #ff4b4b !important;
         color: #ff4b4b !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         background-color: rgba(255, 75, 75, 0.05) !important;
     }
     
-    /* 【修正箇所】クリック中・クリック後の黒ずみを「無効化」する設定 */
-    div.stButton > button:active, 
+    /* 【最重要】クリック後、カーソルを離しても黒く残るのを防ぐ設定 */
     div.stButton > button:focus, 
-    div.stButton > button:focus:active {
-        background-color: #D3D3D3 !important; /* 元のグレーを維持 */
-        background-image: none !important;    /* デフォルトの暗いグラデーションを消去 */
-        box-shadow: none !important;          /* 変な影を消去 */
-        color: #000000 !important;             /* 文字を黒で固定 */
-        outline: none !important;
-        border-color: #999999 !important;     /* 枠線も維持 */
+    div.stButton > button:active,
+    div.stButton > button:focus:not(:active) {
+        background-color: #D3D3D3 !important; /* 強制的に元のグレーに戻す */
+        color: #000000 !important;             /* 文字色も黒に戻す */
+        border-color: #999999 !important;     /* 枠線も元通り */
+        box-shadow: none !important;          /* 青い光や影を消す */
+        outline: none !important;             /* ブラウザの選択枠を消す */
     }
 
-    /* 以下、変更なし */
+    /* 以下、他のパーツのデザイン（変更なし） */
     div.stButton > button[kind="secondary"] { border: 1px solid #ddd; }
     
     div[data-testid="stDateInput"], div[data-testid="stSelectbox"], 
     div[data-testid="stNumberInput"], div[data-testid="stCheckbox"] {
         background-color: transparent !important;
         border: none !important;
-        box-shadow: none !important;
     }
 
     div[data-baseweb="input"], div[data-baseweb="select"] > div, 
@@ -87,7 +79,6 @@ st.markdown("""
         background-color: #FFFFFF !important;
         color: #000000 !important;
         border: 1px solid #CCCCCC !important;
-        box-shadow: none !important;
         border-radius: 8px !important;
     }
 
@@ -101,19 +92,13 @@ st.markdown("""
         background-color: #F0F2F6 !important;
         border: 1px solid #CCCCCC !important;
         border-radius: 4px !important;
-        margin: 2px !important;
     }
 
-    [data-testid="stNumberInputStepDown"] svg { fill: #0000FF !important; display: block !important; }
-    [data-testid="stNumberInputStepUp"] svg { fill: #FF0000 !important; display: block !important; }
+    [data-testid="stNumberInputStepDown"] svg { fill: #0000FF !important; }
+    [data-testid="stNumberInputStepUp"] svg { fill: #FF0000 !important; }
 
-    div[data-testid="stCheckbox"] div[role="checkbox"] {
-        background-color: #FFFFFF !important;
-        border: 1px solid #CCCCCC !important;
-    }
-    div[data-testid="stCheckbox"] div[role="checkbox"][aria-checked="true"] {
-        background-color: #CCCCCC !important;
-    }
+    div[data-testid="stCheckbox"] div[role="checkbox"] { background-color: #FFFFFF !important; border: 1px solid #CCCCCC !important; }
+    div[data-testid="stCheckbox"] div[role="checkbox"][aria-checked="true"] { background-color: #CCCCCC !important; }
     div[data-testid="stCheckbox"] svg { stroke: #000000 !important; }
 
     h1, h2, h3, p, label, span, .stMarkdown, [data-testid="stMetricValue"], [data-testid="stWidgetLabel"] p {
