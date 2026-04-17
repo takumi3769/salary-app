@@ -5,7 +5,6 @@ import jpholiday
 from sqlalchemy import text
 
 # --- 1. データベース設定 (Streamlit Cloud永続化対応) ---
-# st.connectionによりクラウド上でもデータが保持されます
 conn = st.connection('salary_db', type='sql', url='sqlite:///my_salary.db')
 
 def init_db():
@@ -142,6 +141,12 @@ st.markdown("""
     /* 履歴テーブル */
     div[data-testid="stTable"] { background-color: #FFFFFF !important; border-radius: 10px; }
     table { background-color: #FFFFFF !important; color: #000000 !important; }
+
+    /* --- ここから追加：エキスパンダー（データの個別削除）のタイトルを赤くする --- */
+    .stExpander details summary p {
+        color: #FF0000 !important;
+        font-weight: bold !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -236,14 +241,13 @@ st.info(f"💡 **計算結果**\n\n実労働: {int(actual_h*60)}分 ({actual_h:.
 
 # --- 7. 保存・履歴管理 ---
 if st.button("💾 この内容で履歴に保存", use_container_width=True):
-        with conn.session as s:
-            # text() で SQL文を囲む
-            s.execute(text("INSERT INTO shifts (date, start, end, total_h, night_h, salary) VALUES (:date, :start, :end, :total_h, :night_h, :salary)"),
-                      {"date": d.strftime('%Y-%m-%d'), "start": s_t.strftime('%H:%M'), "end": e_t.strftime('%H:%M'), 
-                       "total_h": round(actual_h, 2), "night_h": round(night_h, 2), "salary": salary})
-            s.commit()
-        st.success("履歴に保存しました！")
-        st.rerun()
+    with conn.session as s:
+        s.execute(text("INSERT INTO shifts (date, start, end, total_h, night_h, salary) VALUES (:date, :start, :end, :total_h, :night_h, :salary)"),
+                  {"date": d.strftime('%Y-%m-%d'), "start": s_t.strftime('%H:%M'), "end": e_t.strftime('%H:%M'), 
+                   "total_h": round(actual_h, 2), "night_h": round(night_h, 2), "salary": salary})
+        s.commit()
+    st.success("履歴に保存しました！")
+    st.rerun()
 
 st.subheader("📊 勤務履歴")
 df = conn.query("SELECT * FROM shifts ORDER BY date DESC", ttl=0)
@@ -258,6 +262,7 @@ if not df.empty:
     })
     st.table(df_display)
 
+    # --- データの個別削除（ここが赤くなります） ---
     with st.expander("🗑️ データの個別削除"):
         delete_options = {f"{row['date']} ({row['start']}~{row['end']}) - {row['salary']:,}円": row['id'] for _, row in df.iterrows()}
         target_label = st.selectbox("削除するデータを選択", options=list(delete_options.keys()), key="delete_select")
