@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, time
 import jpholiday
+from sqlalchemy import text
 
 # --- 1. データベース設定 (Streamlit Cloud永続化対応) ---
 # st.connectionによりクラウド上でもデータが保持されます
@@ -9,8 +10,8 @@ conn = st.connection('salary_db', type='sql', url='sqlite:///my_salary.db')
 
 def init_db():
     with conn.session as s:
-        s.execute('CREATE TABLE IF NOT EXISTS shifts (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, start TEXT, end TEXT, total_h REAL, night_h REAL, salary INTEGER);')
-        s.execute('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);')
+        s.execute(text('CREATE TABLE IF NOT EXISTS shifts (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, start TEXT, end TEXT, total_h REAL, night_h REAL, salary INTEGER);'))
+        s.execute(text('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);'))
         s.commit()
 
 init_db()
