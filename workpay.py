@@ -258,7 +258,7 @@ if not df.empty:
     })
     st.table(df_display)
 
-    with st.expander("🗑️ データの個別削除"):
+    with st.expander("データの個別削除"):
         delete_options = {f"{row['date']} ({row['start']}~{row['end']}) - {row['salary']:,}円": row['id'] for _, row in df.iterrows()}
         target_label = st.selectbox("削除するデータを選択", options=list(delete_options.keys()), key="delete_select")
         if st.button("選択したデータを削除"):
