@@ -28,79 +28,123 @@ def save_wage(wage):
 # --- 2. 画面基本設定 ---
 st.set_page_config(page_title="給料管理", page_icon="💰", layout="centered")
 
-# --- 3. カスタムCSS（Expanderの黒ずみ・ボタンの不具合を完全修正） ---
+# --- 3. カスタムCSS（デザイン調整・ホバーエフェクト） ---
 st.markdown("""
     <style>
-    /* 全体の背景設定 */
-    header, [data-testid="stHeader"] { background-color: #E0F2F7 !important; }
+    /* ヘッダー周りだけを水色に設定 */
+    header, [data-testid="stHeader"] {
+        background-color: #E0F2F7 !important;
+    }
+
+    /* 全体の背景色を水色に固定 */
     .stApp { background-color: #E0F2F7 !important; }
     section[data-testid="stSidebar"] { background-color: #FFFFFF !important; }
 
-    /* --- 【今回のメイン修正】Expander（データの個別削除）の黒ずみ対策 --- */
-    /* 通常時・マウスホバー時・クリック後すべてにおいて背景を透明化して黒ずみを消す */
-    div[data-testid="stExpander"] details {
-        border: none !important;
-        background-color: transparent !important;
+    /* 全てのボタンに対する視覚エフェクト */
+    div.stButton > button {
+        transition: all 0.2s ease-in-out !important;
+        border-radius: 8px !important;
     }
-    div[data-testid="stExpander"] summary {
-        background-color: transparent !important;
-        color: #000000 !important;
+    
+    /* マウスを載せたとき */
+    div.stButton > button:hover {
+        transform: translateY(-2px) scale(1.01); /* 少し浮き上がって大きく */
+        border-color: #ff4b4b !important;       /* ストリームリット標準のアクセント色 */
+        color: #ff4b4b !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* 影をつけて立体感を出す */
+        background-color: rgba(255, 75, 75, 0.05) !important;
     }
-    /* クリックした後のフォーカス（黒い枠や背景）を徹底的に消去 */
-    div[data-testid="stExpander"] summary:focus,
-    div[data-testid="stExpander"] summary:active,
-    div[data-testid="stExpander"] summary:hover {
-        background-color: rgba(0,0,0,0.05) !important; /* ほんの少し暗くする程度 */
-        outline: none !important;
-        box-shadow: none !important;
-    }
-    /* アイコンの色を黒に固定 */
-    div[data-testid="stExpander"] svg {
-        fill: #000000 !important;
+    
+    /* ボタンをクリックした瞬間 */
+    div.stButton > button:active {
+        transform: translateY(0px) scale(0.98);
+        transition: 0.1s !important;
     }
 
-    /* --- ボタンのスタイル（グレーを維持しつつ黒ずみ防止） --- */
+    /* 保存ボタン（フルサイズボタン）を少し目立たせる */
+    div.stButton > button[kind="secondary"] {
+        border: 1px solid #ddd;
+    }
+    
+    /* --- 入力エリアの背景黒ずみを徹底修正 --- */
+    div[data-testid="stDateInput"], 
+    div[data-testid="stSelectbox"], 
+    div[data-testid="stNumberInput"],
+    div[data-testid="stCheckbox"] {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* ボックス本体（白背景・黒文字） */
+    div[data-baseweb="input"], 
+    div[data-baseweb="select"] > div, 
+    div[data-testid="stDateInput"] > div,
+    div[data-testid="stNumberInput"] div[data-baseweb="input"] {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border: 1px solid #CCCCCC !important;
+        box-shadow: none !important;
+        border-radius: 8px !important;
+    }
+
+    /* 入力テキストの色と背景 */
+    input {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+    }
+
+    /* --- 数値入力（+/-）ボタンとアイコンの修正 --- */
+    div[data-testid="stNumberInput"] button {
+        background-color: #F0F2F6 !important; /* 少しグレーにして押しやすく */
+        border: 1px solid #CCCCCC !important;
+        border-radius: 4px !important;
+        margin: 2px !important;
+    }
+
+    /* アイコン(SVG)を強制表示 */
+    [data-testid="stNumberInputStepDown"] svg { 
+        fill: #0000FF !important; /* マイナスは青 */
+        display: block !important;
+    }
+    [data-testid="stNumberInputStepUp"] svg { 
+        fill: #FF0000 !important; /* プラスは赤 */
+        display: block !important;
+    }
+
+    /* --- チェックボックスのデザイン --- */
+    div[data-testid="stCheckbox"] div[role="checkbox"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #CCCCCC !important;
+    }
+    div[data-testid="stCheckbox"] div[role="checkbox"][aria-checked="true"] {
+        background-color: #CCCCCC !important;
+    }
+    div[data-testid="stCheckbox"] svg {
+        stroke: #000000 !important;
+    }
+
+    /* --- 通常ボタン（保存・削除） --- */
     .stButton > button {
         background-color: #D3D3D3 !important; 
         color: #000000 !important; 
         border: 1px solid #999999 !important;
         border-radius: 8px !important;
         font-weight: bold !important;
-        -webkit-tap-highlight-color: transparent !important;
-    }
-    
-    div.stButton > button:hover {
-        border-color: #ff4b4b !important;
-        color: #ff4b4b !important;
-        background-color: #E0E0E0 !important;
-    }
-    
-    /* ボタンクリック後の変色を防止 */
-    div.stButton > button:focus, 
-    div.stButton > button:active,
-    div.stButton > button:focus:not(:active) {
-        background-color: #D3D3D3 !important;
-        background-image: none !important;
-        box-shadow: none !important;
-        outline: none !important;
     }
 
-    /* --- 入力エリア・テキスト設定（維持） --- */
-    div[data-baseweb="input"], div[data-baseweb="select"] > div, 
-    div[data-testid="stDateInput"] > div {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        border: 1px solid #CCCCCC !important;
-    }
-    
+    /* 全文字色を黒に固定 */
     h1, h2, h3, p, label, span, .stMarkdown, [data-testid="stMetricValue"], [data-testid="stWidgetLabel"] p {
         color: #000000 !important;
     }
 
+    /* 履歴テーブル */
     div[data-testid="stTable"] { background-color: #FFFFFF !important; border-radius: 10px; }
     table { background-color: #FFFFFF !important; color: #000000 !important; }
 </style>
 """, unsafe_allow_html=True)
+
 # --- 4. サイドバー：時給設定 ---
 current_wage = get_saved_wage()
 with st.sidebar:
