@@ -27,123 +27,68 @@ def save_wage(wage):
 # --- 2. 画面基本設定 ---
 st.set_page_config(page_title="給料管理", page_icon="💰", layout="centered")
 
-# --- 3. カスタムCSS（デザイン調整・ホバーエフェクト） ---
+# --- 3. カスタムCSS ---
 st.markdown("""
     <style>
-    /* ヘッダー周りだけを水色に設定 */
-    header, [data-testid="stHeader"] {
-        background-color: #E0F2F7 !important;
-    }
-
-    /* 全体の背景色を水色に固定 */
+    header, [data-testid="stHeader"] { background-color: #E0F2F7 !important; }
     .stApp { background-color: #E0F2F7 !important; }
     section[data-testid="stSidebar"] { background-color: #FFFFFF !important; }
 
-    /* 全てのボタンに対する視覚エフェクト */
     div.stButton > button {
         transition: all 0.2s ease-in-out !important;
         border-radius: 8px !important;
     }
     
-    /* マウスを載せたとき */
     div.stButton > button:hover {
-        transform: translateY(-2px) scale(1.01); /* 少し浮き上がって大きく */
-        border-color: #ff4b4b !important;       /* ストリームリット標準のアクセント色 */
+        transform: translateY(-2px) scale(1.01);
+        border-color: #ff4b4b !important;
         color: #ff4b4b !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* 影をつけて立体感を出す */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         background-color: rgba(255, 75, 75, 0.05) !important;
     }
     
-    /* ボタンをクリックした瞬間 */
     div.stButton > button:active {
         transform: translateY(0px) scale(0.98);
         transition: 0.1s !important;
     }
 
-    /* 保存ボタン（フルサイズボタン）を少し目立たせる */
-    div.stButton > button[kind="secondary"] {
-        border: 1px solid #ddd;
-    }
-    
-    /* --- 入力エリアの背景黒ずみを徹底修正 --- */
-    div[data-testid="stDateInput"], 
-    div[data-testid="stSelectbox"], 
-    div[data-testid="stNumberInput"],
-    div[data-testid="stCheckbox"] {
+    div[data-testid="stDateInput"], div[data-testid="stSelectbox"], div[data-testid="stNumberInput"], div[data-testid="stCheckbox"] {
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
     }
 
-    /* ボックス本体（白背景・黒文字） */
-    div[data-baseweb="input"], 
-    div[data-baseweb="select"] > div, 
-    div[data-testid="stDateInput"] > div,
+    div[data-baseweb="input"], div[data-baseweb="select"] > div, div[data-testid="stDateInput"] > div,
     div[data-testid="stNumberInput"] div[data-baseweb="input"] {
         background-color: #FFFFFF !important;
         color: #000000 !important;
         border: 1px solid #CCCCCC !important;
-        box-shadow: none !important;
         border-radius: 8px !important;
     }
 
-    /* 入力テキストの色と背景 */
     input {
         background-color: #FFFFFF !important;
         color: #000000 !important;
         -webkit-text-fill-color: #000000 !important;
     }
 
-    /* --- 数値入力（+/-）ボタンとアイコンの修正 --- */
-    div[data-testid="stNumberInput"] button {
-        background-color: #F0F2F6 !important; /* 少しグレーにして押しやすく */
-        border: 1px solid #CCCCCC !important;
-        border-radius: 4px !important;
-        margin: 2px !important;
-    }
-
-    /* アイコン(SVG)を強制表示 */
-    [data-testid="stNumberInputStepDown"] svg { 
-        fill: #0000FF !important; /* マイナスは青 */
-        display: block !important;
-    }
-    [data-testid="stNumberInputStepUp"] svg { 
-        fill: #FF0000 !important; /* プラスは赤 */
-        display: block !important;
-    }
-
-    /* --- チェックボックスのデザイン --- */
-    div[data-testid="stCheckbox"] div[role="checkbox"] {
-        background-color: #FFFFFF !important;
-        border: 1px solid #CCCCCC !important;
-    }
-    div[data-testid="stCheckbox"] div[role="checkbox"][aria-checked="true"] {
-        background-color: #CCCCCC !important;
-    }
-    div[data-testid="stCheckbox"] svg {
-        stroke: #000000 !important;
-    }
-
-    /* --- 通常ボタン（保存・削除） --- */
     .stButton > button {
         background-color: #D3D3D3 !important; 
         color: #000000 !important; 
         border: 1px solid #999999 !important;
-        border-radius: 8px !important;
         font-weight: bold !important;
     }
 
-    /* 全文字色を黒に固定 */
     h1, h2, h3, p, label, span, .stMarkdown, [data-testid="stMetricValue"], [data-testid="stWidgetLabel"] p {
         color: #000000 !important;
     }
 
-    /* 履歴テーブル */
-    div[data-testid="stTable"] { background-color: #FFFFFF !important; border-radius: 10px; }
-    table { background-color: #FFFFFF !important; color: #000000 !important; }
+    div[data-testid="stDataEditor"] {
+        background-color: #FFFFFF !important;
+        border-radius: 10px;
+    }
 </style>
 """, unsafe_allow_html=True)
-
 
 # --- 4. サイドバー：時給設定 ---
 current_wage = get_saved_wage()
@@ -266,3 +211,22 @@ if not df.empty:
             "id": None, # ID非表示
             "date": "日付", "start": "出勤", "end": "退勤", 
             "total_h": "労働(h)", "night_h": "深夜(h)", "salary": "給料(円)"
+        },
+        disabled=["date", "start", "end", "total_h", "night_h", "salary"], 
+        hide_index=True,
+        use_container_width=True,
+        key="history_editor"
+    )
+
+    # チェックされた行を抽出
+    to_delete = edited_df[edited_df["選択"] == True]
+
+    if not to_delete.empty:
+        if st.button(f"🗑️ 選択した {len(to_delete)} 件を完全に削除する", use_container_width=True):
+            with conn.session as s:
+                for target_id in to_delete["id"]:
+                    s.execute(text("DELETE FROM shifts WHERE id = :id"), {"id": int(target_id)})
+                s.commit()
+            st.rerun()
+else:
+    st.write("履歴データはありません。")
